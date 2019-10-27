@@ -4,8 +4,6 @@
       <v-card
         v-for="item in items"
         :key="item.name"
-        min-width="200px"
-        min-height="100px"
         outlined
         class="noselect"
         :color="item.color"
@@ -18,7 +16,7 @@
       </v-card>
     </div>
     <v-card id="current-order">
-      <v-card-title>aktuelle Bestellung</v-card-title>
+      <v-card-title>aktuelle Bestellung: {{toPriceString(totalPrice)}}</v-card-title>
       <v-card-text>
         <v-list-item v-for="(item, idx) in currentOrder" :key="idx">
           <v-list-item-content>
@@ -35,53 +33,56 @@
         </v-list-item>
       </v-card-text>
       <v-card-actions v-if="currentOrder.length > 0">
-        <v-btn text outlined color="error">löschen</v-btn>
-        <v-btn text outlined color="success">Bezahlen</v-btn>
+        <v-btn text outlined color="error" @click="tryDelete()">löschen</v-btn>
+        <v-btn text outlined color="success" to="/pay">Bezahlen</v-btn>
     </v-card-actions>
     </v-card>
   </div>
 </template>
 
 <script>
+import store from '../store'
 export default {
   data: () => ({
-    items: [
-      { name: "Weißwein", amount: 2.5, color: "#caf216" },
-      { name: "Rotwein", amount: 2.5, color: "#750802", dark: true },
-      { name: "Weinschorle", amount: 2, color: "#f5ffe0" },
-      { name: "Cola", amount: 1.5, color: "#f22116" },
-      { name: "Fanta", amount: 1.5, color: "#f2d516" },
-      { name: "Sprite", amount: 1.5, color: "#07b558" },
-      { name: "Wasser", amount: 1, color: "#52bdfa" },
-      { name: "Pfand 1x", amount: -1, color: "#d652fa" }
-    ],
-    currentOrder: []
+    items: store.items,
+    currentOrder: store.currentOrder
   }),
   computed: {
     toPriceString() {
       return amount => amount.toFixed(2) + "€";
+    },
+    totalPrice() {
+      return this.currentOrder.reduce((acc, item) => {
+        let price = this.items.find(e => e.name == item.name).amount
+        return acc + price * item.count
+      }, 0);
     }
   },
   methods: {
     addToOrder(item) {
-      let existingItem = this.currentOrder.find(e => e.name == item.name)
+      let existingItem = store.currentOrder.find(e => e.name == item.name)
       if (existingItem != undefined) {
         existingItem.count += 1;
       }
       else {
-        this.currentOrder.push({
+        store.currentOrder.push({
           name: item.name,
           count: 1
         })
       }
     },
     removeOne(item) {
-      let itemIdx = this.currentOrder.findIndex(e => e.name == item.name)
+      let itemIdx = store.currentOrder.findIndex(e => e.name == item.name)
       if (itemIdx >= 0) {
-        this.currentOrder[itemIdx].count -= 1;
-        if (this.currentOrder[itemIdx].count <= 0) {
-          this.currentOrder.splice(itemIdx, 1)
+        store.currentOrder[itemIdx].count -= 1;
+        if (store.currentOrder[itemIdx].count <= 0) {
+          store.currentOrder.splice(itemIdx, 1)
         }
+      }
+    },
+    tryDelete() {
+      if (confirm('Bestellung zurücksetzen?')) {
+        store.currentOrder = []
       }
     }
   }
@@ -103,6 +104,8 @@ export default {
 .items .v-card {
   margin: 5px;
   cursor: pointer;
+  min-width: 200px;
+  min-height: 100px;
 }
 
 #current-order .order-count {
@@ -112,6 +115,11 @@ export default {
 @media only screen and (max-width: 900px) {
   .base-grid {
     grid-template-columns: 100%;
+  }
+
+  .items .v-card {
+    min-width: 0;
+    min-height: 0;
   }
 }
 </style>
