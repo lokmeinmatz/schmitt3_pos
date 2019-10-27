@@ -20,7 +20,7 @@
     </v-card-text>
     <v-card-actions>
       <v-btn text outlined color="error" @click="goBack()">zurück zu Bestellung</v-btn>
-      <v-btn text outlined color="success">Bezahlt
+      <v-btn text outlined color="success" @click="paid()">Bezahlt
         <v-icon>mdi-check-all</v-icon>
         </v-btn>
     </v-card-actions>
@@ -29,12 +29,14 @@
 
 <script>
 import store from '../store'
+import firebase from '../firebase'
 
 export default {
   data: () => ({
     items: store.items,
     currentOrder: store.currentOrder,
-    moneyGiven: 0
+    moneyGiven: 0,
+    transactionRef: store.selectedConcert.ref.collection('Transaktionen')
   }),
   computed: {
     toPriceString() {
@@ -53,6 +55,23 @@ export default {
   methods: {
     goBack() {
       this.$router.back()
+    },
+    paid() {
+
+      let items = {}
+
+      for (let item of store.currentOrder) {
+        items[item.name] = item.count
+        console.log(item)
+      }
+      // send to firebase
+      this.transactionRef.add({
+        finished: false,
+        items: items,
+        time: firebase.firestore.Timestamp.fromDate(new Date())
+      })
+      store.currentOrder.splice(0, store.currentOrder.length)
+      this.goBack()
     }
   }
 };

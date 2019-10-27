@@ -1,13 +1,13 @@
 <template>
   <v-app>
     <v-app-bar app>
-      <v-toolbar-title class="headline text-uppercase">
+      <v-toolbar-title class="headline text-uppercase" @click="goHome()">
         <span>Schmitt3</span>
         <span class="font-weight-light">POS</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-toolbar-items class="center">
-        <p class="headline">Status: {{}}</p>
+      <v-toolbar-items>
+       Konzert: {{concertName}}
       </v-toolbar-items>
       <v-spacer></v-spacer>
       <v-btn
@@ -26,15 +26,29 @@
 </template>
 
 <script>
+import store from './store'
 
 export default {
   name: 'App',
   components: {
   },
   data: () => ({
-    //
+    store: store
   }),
-};
+  computed: {
+    concertName() {
+      if(store.selectedConcert) {
+        return store.selectedConcert.name
+      } 
+      return 'nicht ausgewählt'
+    }
+  },
+  methods: {
+    goHome() {
+      this.$router.push('/')
+    }
+  }
+}
 </script>
 <style>
 .center {

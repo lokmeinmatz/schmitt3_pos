@@ -82,7 +82,7 @@ export default {
     },
     tryDelete() {
       if (confirm('Bestellung zurücksetzen?')) {
-        store.currentOrder = []
+        store.currentOrder.splice(0, store.currentOrder.length)
       }
     }
   }

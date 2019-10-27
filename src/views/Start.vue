@@ -1,14 +1,21 @@
 <template>
   <div class="center" style="width: 100%; height: 100%; justify-content: center;">
-    <v-card raised >
+    <v-card raised v-if="!loggedIn()">
       <v-card-title>LOGIN</v-card-title>
       <v-card-text>
-        <v-text-field outlined label="Mail"></v-text-field>
-        <v-text-field outlined label="Password"></v-text-field>
+        <v-text-field outlined label="Mail" v-model="mail"></v-text-field>
+        <v-text-field outlined label="Password" v-model="password"></v-text-field>
       </v-card-text>
       <v-card-actions>
-        <v-btn text color="success">Verbinden</v-btn>
+        <v-btn text color="success" :loading="loggingIn" @click="login()">Verbinden</v-btn>
       </v-card-actions>
+    </v-card>
+    <v-card v-else>
+      <v-card-text>
+        <v-select label="Konzert" :items="concerts" item-text="name" item-value="id" @change="setConcert"></v-select>
+        <v-btn to="/order" class="mr-4">Kasse</v-btn>
+        <v-btn to="/process" class="mr-4">Ausgabe</v-btn>
+      </v-card-text>
     </v-card>
   </div>
 </template>
@@ -16,21 +23,18 @@
 <script>
 
 import store from '../store'
+import firebase from '../firebase'
 
 export default {
   data: () => ({
-    items: [
-      { name: "Weißwein", amount: 3.5, color: "#caf216" },
-      { name: "Rotwein", amount: 3.5, color: "#750802", dark: true },
-      { name: "Weinschorle", amount: 3, color: "#f5ffe0" },
-      { name: "Cola", amount: 2.5, color: "#f22116" },
-      { name: "Fanta", amount: 2.5, color: "#f2d516" },
-      { name: "Sprite", amount: 2.5, color: "#07b558" },
-      { name: "Wasser", amount: 2, color: "#52bdfa" },
-      { name: "-Pfand 1x", amount: -1, color: "#d652fa" }
-    ]
+    mail: '',
+    password: '',
+    loggingIn: false
   }),
   computed: {
+    concerts() {
+      return store.concerts
+    },
     toPriceString() {
       return amount => amount.toFixed(2) + "€";
     },
@@ -42,30 +46,31 @@ export default {
     }
   },
   methods: {
-    addToOrder(item) {
-      let existingItem = store.currentOrder.find(e => e.name == item.name);
-      if (existingItem != undefined) {
-        existingItem.count += 1;
-      } else {
-        store.currentOrder.push({
-          name: item.name,
-          count: 1
-        });
-      }
+    async setConcert(d) {
+      let docref = firebase.firestore().collection('Konzerte').doc(d)
+      store.selectedConcert = {id: d, name: (await docref.get()).get('name'), ref: docref}
+      console.log(store.selectedConcert)
     },
-    removeOne(item) {
-      let itemIdx = store.currentOrder.findIndex(e => e.name == item.name);
-      if (itemIdx >= 0) {
-        store.currentOrder[itemIdx].count -= 1;
-        if (this.currentOrder[itemIdx].count <= 0) {
-          store.currentOrder.splice(itemIdx, 1);
-        }
-      }
+    loggedIn() {
+      //eslint-disable-next-line
+      return store.user != null
     },
-    tryDelete() {
-      if (confirm("Bestellung zurücksetzen?")) {
-        store.currentOrder = [];
+    login() {
+      this.loggingIn = true
+      if (this.password.length == 0 || this.mail.length == 0) {
+        console.error('missing password or mail')
+        return
       }
+
+      firebase.auth().signInWithEmailAndPassword(this.mail.trim(), this.password.trim())
+      .then(() => {
+        // TODO logged in
+        console.log('logged in')
+        this.loggingIn = false
+      }).catch(error => {
+        console.error(error)
+        this.loggingIn = false
+      })
     }
   }
 };
@@ -90,9 +95,6 @@ export default {
 
 #current-order .order-count {
   padding-right: 10px;
-}
-
-#total-price {
 }
 
 @media only screen and (max-width: 900px) {
