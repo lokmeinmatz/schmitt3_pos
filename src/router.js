@@ -1,11 +1,9 @@
 import VueRouter from 'vue-router'
-import NewOrder from './views/NewOrder.vue'
-import PayOrder from './views/PayOrder.vue'
 import Start from './views/Start.vue'
-import ProcessOrders from './views/ProcessOrders.vue'
 import store from './store'
 
 const router = new VueRouter({
+    mode: 'history',
     routes: [
         {
             path: '/',
@@ -13,24 +11,28 @@ const router = new VueRouter({
         },
         {
             path: '/order',
-            component: NewOrder
+            component: () => import('./views/NewOrder.vue')
         },
         {
             path: '/process',
-            component: ProcessOrders
+            component: () => import('./views/ProcessOrders.vue')
+        },
+        {
+            path: '/stats',
+            component: () => import('./views/Stats.vue')
         },
         {
             path: '/pay',
-            component: PayOrder
+            component: () => import('./views/PayOrder.vue')
         }
     ],
 
 })
 
 router.beforeEach((to, from, next) => {
-    console.log(store.user, store.selectedConcert)
     if (to.path == '/')  next()
     else if (store.user == null || store.selectedConcert == null) {
+        // eslint-disable-next-line
         console.log('redirect to /')
         next({path: '/', replace: true})
         alert('Bitte wähle ein Konzert aus')

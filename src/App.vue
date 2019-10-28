@@ -7,15 +7,14 @@
       </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items>
-       Konzert: {{concertName}}
+       
       </v-toolbar-items>
       <v-spacer></v-spacer>
       <v-btn
         text
-        href="https://github.com/lokmeinmatz/schmitt3_pos"
-        target="_blank"
+        to="/"
       >
-        <span>BETA</span>
+        Konzert: {{concertName}}
       </v-btn>
     </v-app-bar>
 

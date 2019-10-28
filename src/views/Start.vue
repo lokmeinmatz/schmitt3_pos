@@ -4,7 +4,15 @@
       <v-card-title>LOGIN</v-card-title>
       <v-card-text>
         <v-text-field outlined label="Mail" v-model="mail"></v-text-field>
-        <v-text-field outlined label="Password" v-model="password"></v-text-field>
+        <v-text-field
+          outlined
+          label="Password"
+          v-model="password"
+          :append-icon="showPassword ? 'mdi-visibility' : 'mdi-visibility_off'"
+          
+            @click:append="showPassword = !showPassword"
+          :type="showPassword ? 'text' : 'password'"
+        ></v-text-field>
       </v-card-text>
       <v-card-actions>
         <v-btn text color="success" :loading="loggingIn" @click="login()">Verbinden</v-btn>
@@ -12,28 +20,38 @@
     </v-card>
     <v-card v-else>
       <v-card-text>
-        <v-select label="Konzert" :items="concerts" item-text="name" item-value="id" @change="setConcert"></v-select>
+        <v-select
+          label="Konzert"
+          :items="concerts"
+          item-text="name"
+          item-value="id"
+          @change="setConcert"
+        ></v-select>
         <v-btn to="/order" class="mr-4">Kasse</v-btn>
         <v-btn to="/process" class="mr-4">Ausgabe</v-btn>
       </v-card-text>
     </v-card>
+    <v-btn 
+        id="github"
+        text
+        href="https://github.com/lokmeinmatz/schmitt3_pos">Github</v-btn>
   </div>
 </template>
 
 <script>
-
-import store from '../store'
-import firebase from '../firebase'
+import store from "../store";
+import firebase from "../firebase";
 
 export default {
   data: () => ({
-    mail: '',
-    password: '',
+    mail: "",
+    password: "",
+    showPassword: false,
     loggingIn: false
   }),
   computed: {
     concerts() {
-      return store.concerts
+      return store.concerts;
     },
     toPriceString() {
       return amount => amount.toFixed(2) + "€";
@@ -47,54 +65,54 @@ export default {
   },
   methods: {
     async setConcert(d) {
-      let docref = firebase.firestore().collection('Konzerte').doc(d)
-      store.selectedConcert = {id: d, name: (await docref.get()).get('name'), ref: docref}
-      console.log(store.selectedConcert)
+      let docref = firebase
+        .firestore()
+        .collection("Konzerte")
+        .doc(d);
+      store.selectedConcert = {
+        id: d,
+        name: (await docref.get()).get("name"),
+        ref: docref
+      };
     },
     loggedIn() {
       //eslint-disable-next-line
-      return store.user != null
+      return store.user != null;
     },
     login() {
-      this.loggingIn = true
+      this.loggingIn = true;
       if (this.password.length == 0 || this.mail.length == 0) {
-        console.error('missing password or mail')
-        return
+        // eslint-disable-next-line
+        console.error("missing password or mail");
+        return;
       }
 
-      firebase.auth().signInWithEmailAndPassword(this.mail.trim(), this.password.trim())
-      .then(() => {
-        // TODO logged in
-        console.log('logged in')
-        this.loggingIn = false
-      }).catch(error => {
-        console.error(error)
-        this.loggingIn = false
-      })
+      firebase
+        .auth()
+        .signInWithEmailAndPassword(this.mail.trim(), this.password.trim())
+        .then(() => {
+          // eslint-disable-next-line
+          console.log("logged in");
+          this.loggingIn = false;
+        })
+        .catch(error => {
+          // eslint-disable-next-line
+          console.error(error);
+          this.loggingIn = false;
+        });
     }
   }
 };
 </script>
 <style scoped>
-.base-grid {
-  display: grid;
-  grid-template-columns: auto 400px;
-}
-
-.items {
+.center {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  align-content: flex-start;
+  flex-direction: column;
 }
 
-.items .v-card {
-  margin: 5px;
-  cursor: pointer;
-}
-
-#current-order .order-count {
-  padding-right: 10px;
+#github {
+  margin: 10px;
+  margin-top: 30px;
 }
 
 @media only screen and (max-width: 900px) {

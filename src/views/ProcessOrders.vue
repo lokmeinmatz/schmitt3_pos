@@ -68,10 +68,12 @@ export default {
   },
   methods: {
     finish(id) {
+      // eslint-disable-next-line
       console.log('removing ', id)
       
       this.transactionRef.doc(id).update({finished: true})
-      .catch(e => console.log(e))
+      // eslint-disable-next-line
+      .catch(e => console.error(e))
     }
   }
 };
