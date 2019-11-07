@@ -35,6 +35,7 @@ export default {
 
     this.transactionRef = store.selectedConcert.ref.collection('Transaktionen')
     this.transactionRef.onSnapshot({
+      // eslint-disable-next-line
       error: e => console.error(e),
       next: snapshot => {
         let changes = snapshot.docChanges()

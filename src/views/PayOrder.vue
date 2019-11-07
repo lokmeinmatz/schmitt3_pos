@@ -18,7 +18,7 @@
       </div>
       <h3>Rückgeld: {{toPriceString(moneyBack)}}</h3>
     </v-card-text>
-    <v-card-actions style="height: 70px;">
+    <v-card-actions style="height: 70px; flex-wrap: wrap;">
       <v-btn text outlined color="error" @click="goBack()" class="pa-2">zurück zu Bestellung</v-btn>
       <v-btn text outlined :color="moneyBack >= 0 ? 'success' : 'orange'" @click="paid()" class="pa-2">
         Bezahlt

@@ -9,6 +9,8 @@
     </v-card>
     <div class="stats" v-else-if="pageStatus == 'ready'">
       <v-data-table :headers="headers" :items="statsTable"></v-data-table>
+      
+      <v-btn @click="generateData()">Statistik updaten (nicht oft ausführen!)</v-btn>
     </div>
 
     <v-overlay :value="pageStatus == 'loading'">
@@ -77,19 +79,23 @@ export default {
     statsTable() {
       let res = []
       if (this.statsFB == null) return res
-      let total = {name: 'Total', count: 0, sales: 0}
+      let totalWithDeposit = {name: 'Total (mit Pfand)', count: 0, sales: 0}
+      let totalWOutDeposit = {name: 'Total (ohne Pfand)', count: 0, sales: 0}
 
       for(let si in this.statsFB.selledItems) {
         let count = this.statsFB.selledItems[si]
         let cost = store.items.find(e => e.name == si).amount
         res.push({name: si, count: count, sales: this.toPriceString(count * cost)})
         if (!si.includes('Pfand')) {
-          total.count += count
-          total.sales += count * cost
+          totalWOutDeposit.count += count
+          totalWOutDeposit.sales += count * cost
         }
+        totalWithDeposit.count += count
+        totalWithDeposit.sales += count * cost
       }
-      total.sales = this.toPriceString(total.sales)
-      res.push(total)
+      totalWithDeposit.sales = this.toPriceString(totalWithDeposit.sales)
+      totalWOutDeposit.sales = this.toPriceString(totalWOutDeposit.sales)
+      res.push(totalWithDeposit, totalWOutDeposit)
       return res
     }
   },
