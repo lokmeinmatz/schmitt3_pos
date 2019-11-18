@@ -66,9 +66,14 @@ export default {
       for (let item of store.currentOrder) {
         items[item.name] = item.count;
       }
+
+      let pfandOnly = false
+      if (store.currentOrder.length == 1 && store.currentOrder[0].name.includes("Pfand")) {
+        pfandOnly = true
+      }
       // send to firebase
       this.transactionRef.add({
-        finished: false,
+        finished: pfandOnly,
         items: items,
         time: firebase.firestore.Timestamp.fromDate(new Date())
       });

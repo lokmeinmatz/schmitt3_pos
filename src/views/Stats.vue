@@ -79,23 +79,23 @@ export default {
     statsTable() {
       let res = []
       if (this.statsFB == null) return res
-      let totalWithDeposit = {name: 'Total (mit Pfand)', count: 0, sales: 0}
-      let totalWOutDeposit = {name: 'Total (ohne Pfand)', count: 0, sales: 0}
+      let totalCurrent = {name: 'Total in der Kasse', count: 0, sales: 0}
+      let totalWithDeposit = {name: 'Total mit Pfand', count: 0, sales: 0}
 
       for(let si in this.statsFB.selledItems) {
         let count = this.statsFB.selledItems[si]
         let cost = store.items.find(e => e.name == si).amount
         res.push({name: si, count: count, sales: this.toPriceString(count * cost)})
         if (!si.includes('Pfand')) {
-          totalWOutDeposit.count += count
-          totalWOutDeposit.sales += count * cost
+          totalWithDeposit.count += count
+          totalWithDeposit.sales += count * (cost - 1)
+          totalCurrent.count += count
         }
-        totalWithDeposit.count += count
-        totalWithDeposit.sales += count * cost
+        totalCurrent.sales += count * cost
       }
       totalWithDeposit.sales = this.toPriceString(totalWithDeposit.sales)
-      totalWOutDeposit.sales = this.toPriceString(totalWOutDeposit.sales)
-      res.push(totalWithDeposit, totalWOutDeposit)
+      totalCurrent.sales = this.toPriceString(totalCurrent.sales)
+      res.push(totalWithDeposit, totalCurrent)
       return res
     }
   },
