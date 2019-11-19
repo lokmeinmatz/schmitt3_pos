@@ -10,7 +10,7 @@
     <div class="stats" v-else-if="pageStatus == 'ready'">
       <v-data-table :headers="headers" :items="statsTable"></v-data-table>
       
-      <v-btn @click="generateData()">Statistik updaten (nicht oft ausführen!)</v-btn>
+      <v-btn @click="generateData()" class="ma-4">Statistik updaten (nicht oft ausführen!)</v-btn>
     </div>
 
     <v-overlay :value="pageStatus == 'loading'">
