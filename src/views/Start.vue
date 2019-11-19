@@ -24,7 +24,9 @@
           :items="concerts"
           item-text="name"
           item-value="id"
-          @change="setConcert"
+          v-model="concert"
+          :append-outer-icon="store.selectedConcert != null ? 'mdi-square-edit-outline':'mdi-plus-box-outline'"
+          @click:append-outer="$router.push('/concert-settings')"
         ></v-select>
         <v-btn to="/order" class="mr-4 mb-4">Kasse</v-btn>
         <v-btn to="/process" class="mr-4 mb-4">Ausgabe</v-btn>
@@ -45,11 +47,16 @@ export default {
     mail: "",
     password: "",
     showPassword: false,
-    loggingIn: false
+    loggingIn: false,
+    store: store
   }),
   computed: {
     concerts() {
       return store.concerts;
+    },
+    concert: {
+      set(v) { this.setConcert(v) },
+      get() { return store.selectedConcert ? store.selectedConcert.id : null }
     },
     toPriceString() {
       return amount => amount.toFixed(2) + "€";

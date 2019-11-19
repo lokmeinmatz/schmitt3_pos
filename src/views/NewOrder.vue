@@ -34,7 +34,7 @@
       </v-card-text>
       <v-card-actions v-if="currentOrder.length > 0">
         <v-btn text outlined color="error" @click="tryDelete()">löschen</v-btn>
-        <v-btn text outlined color="success" to="/pay">Bezahlen</v-btn>
+        <v-btn text outlined color="success" @click="paid">Bezahlt</v-btn>
     </v-card-actions>
     </v-card>
   </div>
@@ -42,10 +42,13 @@
 
 <script>
 import store from '../store'
+import firebase from '../firebase'
+
 export default {
   data: () => ({
     items: store.items,
-    currentOrder: store.currentOrder
+    currentOrder: store.currentOrder,
+    transactionRef: store.selectedConcert.ref.collection("Transaktionen")
   }),
   computed: {
     toPriceString() {
@@ -84,6 +87,25 @@ export default {
       if (confirm('Bestellung zurücksetzen?')) {
         store.currentOrder.splice(0, store.currentOrder.length)
       }
+    },
+    paid() {
+      let items = {};
+
+      for (let item of store.currentOrder) {
+        items[item.name] = item.count;
+      }
+
+      let pfandOnly = false
+      if (store.currentOrder.length == 1 && store.currentOrder[0].name.includes("Pfand")) {
+        pfandOnly = true
+      }
+      // send to firebase
+      this.transactionRef.add({
+        finished: pfandOnly,
+        items: items,
+        time: firebase.firestore.Timestamp.fromDate(new Date())
+      });
+      store.currentOrder.splice(0, store.currentOrder.length);
     }
   }
 };

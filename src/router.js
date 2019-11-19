@@ -22,8 +22,8 @@ const router = new VueRouter({
             component: () => import('./views/Stats.vue')
         },
         {
-            path: '/pay',
-            component: () => import('./views/PayOrder.vue')
+            path: '/concert-settings',
+            component: () => import('./views/ConcertSettings.vue')
         }
     ],
 
