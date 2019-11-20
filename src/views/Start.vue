@@ -74,9 +74,12 @@ export default {
         .firestore()
         .collection("Konzerte")
         .doc(d);
+      let concertSnapshot = await docref.get()
+
       store.selectedConcert = {
         id: d,
-        name: (await docref.get()).get("name"),
+        name: concertSnapshot.get('name'),
+        products: concertSnapshot.get('products'),
         ref: docref
       };
     },
