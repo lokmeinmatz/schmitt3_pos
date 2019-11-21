@@ -9,7 +9,7 @@
     </v-card>
     <div class="stats" v-else-if="pageStatus == 'ready'">
       <v-data-table :headers="headers" :items="statsTable"></v-data-table>
-      
+
       <v-btn @click="generateData()" class="ma-4">Statistik updaten (nicht oft ausführen!)</v-btn>
     </div>
 
@@ -23,6 +23,7 @@
 </template>
 
 <script>
+import { toPriceString } from "../utils";
 import store from "../store";
 
 /*
@@ -75,38 +76,48 @@ export default {
       });
   },
   computed: {
-    
     statsTable() {
-      let res = []
-      if (this.statsFB == null) return res
-      let totalCurrent = {name: 'Total in der Kasse', count: 0, sales: 0}
-      let totalWithDeposit = {name: 'Total mit Pfand', count: 0, sales: 0}
+      let res = [];
+      if (this.statsFB == null) return res;
+      let totalCurrent = { name: "Total in der Kasse", count: 0, sales: 0 };
+      let totalWithDeposit = { name: "Total mit Pfand", count: 0, sales: 0 };
 
-      for(let si in this.statsFB.selledItems) {
-        let count = this.statsFB.selledItems[si]
-        let cost = store.items.find(e => e.name == si).amount
-        res.push({name: si, count: count, sales: this.toPriceString(count * cost)})
-        if (!si.includes('Pfand')) {
-          totalWithDeposit.count += count
-          totalWithDeposit.sales += count * (cost - 1)
-          totalCurrent.count += count
+      for (let si in this.statsFB.selledItems) {
+        let count = this.statsFB.selledItems[si];
+        const fitem = store.selectedConcert.products.find(e => e.name == si);
+        if (fitem == undefined) {
+          alert(
+            `Jemand hat das Produkt ${si} entfernt, obwohl es bereits bestellt wurde!\nFüge es mit dem alten Preis ein, damit die Statisitk wieder funktioniert.`
+          );
+          continue;
         }
-        totalCurrent.sales += count * cost
+        let cost = fitem.amount;
+        res.push({
+          name: si,
+          count: count,
+          sales: this.toPriceString(count * cost)
+        });
+        if (!si.includes("Pfand")) {
+          totalWithDeposit.count += count;
+          totalWithDeposit.sales += count * (cost - 1);
+          totalCurrent.count += count;
+        }
+        totalCurrent.sales += count * cost;
       }
-      totalWithDeposit.sales = this.toPriceString(totalWithDeposit.sales)
-      totalCurrent.sales = this.toPriceString(totalCurrent.sales)
-      res.push(totalWithDeposit, totalCurrent)
-      return res
+      totalWithDeposit.sales = this.toPriceString(totalWithDeposit.sales);
+      totalCurrent.sales = this.toPriceString(totalCurrent.sales);
+      res.push(totalWithDeposit, totalCurrent);
+      return res;
     }
   },
   methods: {
     toPriceString(amount) {
-      return amount.toFixed(2) + "€";
+      return toPriceString(amount);
     },
     generateData() {
       this.pageStatus = "loading";
       // TODO generate data
-      let selledItems = {}
+      let selledItems = {};
       store.selectedConcert.ref
         .collection("Transaktionen")
         .get()
@@ -115,19 +126,19 @@ export default {
             let allItems = order.get("items");
             for (let itemName in allItems) {
               if (!(itemName in selledItems)) {
-                selledItems[itemName] = allItems[itemName]
+                selledItems[itemName] = allItems[itemName];
               } else {
-                selledItems[itemName] += allItems[itemName]
+                selledItems[itemName] += allItems[itemName];
               }
             }
           });
 
-          this.pageStatus = 'ready'
+          this.pageStatus = "ready";
           this.statsFB = {
             selledItems: selledItems
-          }
+          };
 
-          store.selectedConcert.ref.update({stats: this.statsFB})
+          store.selectedConcert.ref.update({ stats: this.statsFB });
         });
     }
   }

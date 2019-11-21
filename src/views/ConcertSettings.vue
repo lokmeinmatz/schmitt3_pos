@@ -16,7 +16,7 @@
       <h4 class="subtitle-1">Angebot</h4>
     </v-row>
     <v-row justify="center" align="center">
-      <v-col xl="2" lg="4" sm="10">
+      <v-col xl="2" lg="4" sm="6" col="10">
         <v-select
           label="zu kopierendes Konzert"
           :items="store.concerts"
@@ -25,22 +25,22 @@
           v-model="copyFromConcert"
         ></v-select>
       </v-col>
-      <v-col xl="2" lg="2" xs="10">
-        <v-btn block>Kopieren</v-btn>
+      <v-col xl="2" lg="2">
+        <v-btn block @click="copyProductsFromConcert">Kopieren</v-btn>
       </v-col>
     </v-row>
     <v-row justify="center">
-      <v-data-table :headers="itemHeaders" :items="store.selectedConcert.products">
+      <v-data-table :headers="itemHeaders" :items="formattedProducts">
         <template v-slot:item.action="{ item }">
-          <v-icon small class="mr-2" @click="editItem(item)">edit</v-icon>
-          <v-icon small @click="deleteItem(item)">delete</v-icon>
+          <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
+          <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
         </template>
       </v-data-table>
     </v-row>
     <v-row justify="center">
       <v-dialog v-model="dialog" max-width="500px">
         <template v-slot:activator="{ on }">
-          <v-btn color="primary" dark class="mb-2" v-on="on">Neues Produkt</v-btn>
+          <v-btn color="primary" dark class="ma-2" v-on="on">Neues Produkt</v-btn>
         </template>
         <v-card>
           <v-card-title>
@@ -54,13 +54,16 @@
                   <v-text-field v-model="editedItem.name" label="Produktname"></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="6" md="4">
-                  <v-text-field v-model="editedItem.amount" label="Preis (€)"></v-text-field>
+                  <v-text-field v-model="editedItem.amount" type="number" label="Preis (€)"></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="6" md="4">
                   <v-text-field v-model="editedItem.color" label="Farbe (hex)"></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="6" md="4">
-                  <v-text-field v-model="editedItem.dark" label="Dunkel"></v-text-field>
+                  <v-switch
+                    v-model="editedItem.dark"
+                    :label="editedItem.dark ? 'Dunkel' : 'Hell'"
+                  ></v-switch>
                 </v-col>
               </v-row>
             </v-container>
@@ -69,15 +72,17 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
-            <v-btn color="blue darken-1" text @click="save">Save</v-btn>
+            <v-btn color="blue darken-1" text @click="saveItemEdit">Save</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
+      <v-btn color="success" dark class="ma-2" @click="saveChanges">Änderungen speichern</v-btn>
     </v-row>
   </div>
 </template>
 
 <script>
+import {toPriceString, getProductsOfConcert, setProductsAndNameOfCurrentConcert} from '../utils'
 import store from "../store";
 //import firebase from "../firebase";
 
@@ -91,7 +96,8 @@ export default {
       { text: "Bezeichnung", value: "name" },
       { text: "Preis", value: "amount" },
       { text: "Farbe (hex)", value: "color" },
-      { text: "Dunkel", value: "dark" }
+      { text: "Dunkel", value: "dark" },
+      { text: "Actions", value: "action", width: 100 }
     ],
     dialog: false,
     snackbar: true,
@@ -108,17 +114,33 @@ export default {
       dark: false
     }
   }),
+  mounted() {
+    this.localProducts = store.selectedConcert.products.map(e => Object.assign({}, e))
+  },
   methods: {
+    async copyProductsFromConcert() {
+      if (this.copyFromConcert == null) return
+      const p = await getProductsOfConcert(this.copyFromConcert)
+
+      if (p == null) {alert('Failed to load products'); return}
+
+      this.localProducts = p
+    },
     editItem(item) {
-      this.editedIndex = store.selectedConcert.products.indexOf(item);
-      this.editedItem = Object.assign({}, item);
+      this.editedIndex = this.localProducts.findIndex(e => e.name == item.name)
+      if(this.editedIndex < 0) {
+        // eslint-disable-next-line
+        console.error('item doesn\'t exist')
+        return
+      }
+      this.editedItem = Object.assign({}, this.localProducts[this.editedIndex]);
       this.dialog = true;
     },
 
     deleteItem(item) {
-      const index = store.selectedConcert.products.indexOf(item);
+      const index = this.localProducts.findIndex(e => e.name == item.name)
       confirm("Are you sure you want to delete this item?") &&
-        store.selectedConcert.products.splice(index, 1);
+        this.localProducts.splice(index, 1);
     },
 
     close() {
@@ -129,18 +151,36 @@ export default {
       }, 300);
     },
 
-    save() {
+    saveItemEdit() {
+      const famnt = parseFloat(this.editedItem.amount)
+
+      if (isNaN(famnt)) {
+        alert('Preis ist keine gültige Nummer.')
+      }
       if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedItem);
+        Object.assign(this.localProducts[this.editedIndex], this.editedItem)
+        this.localProducts[this.editedIndex].amount = famnt
       } else {
-        this.desserts.push(this.editedItem);
+        this.editedItem.amount = famnt
+        this.localProducts.push(this.editedItem);
       }
       this.close();
+    },
+    saveChanges() {
+      setProductsAndNameOfCurrentConcert(this.localProducts, this.store.selectedConcert.name)
     }
   },
   computed: {
     formTitle() {
       return this.editedIndex === -1 ? "Neues Produkt" : "Produkt bearbeiten";
+    },
+    formattedProducts() {
+      return this.localProducts.map(v => {
+        let n = Object.assign({}, v)
+        n.amount = toPriceString(n.amount)
+        n.dark = n.dark ? 'Ja' : 'Nein'
+        return n
+      })
     }
   }
 };

@@ -41,18 +41,19 @@
 </template>
 
 <script>
+import {toPriceString} from '../utils'
 import store from '../store'
 import firebase from '../firebase'
 
 export default {
   data: () => ({
-    items: store.items,
+    items: store.selectedConcert.products,
     currentOrder: store.currentOrder,
     transactionRef: store.selectedConcert.ref.collection("Transaktionen")
   }),
   computed: {
     toPriceString() {
-      return amount => amount.toFixed(2) + "€";
+      return toPriceString
     },
     totalPrice() {
       return this.currentOrder.reduce((acc, item) => {

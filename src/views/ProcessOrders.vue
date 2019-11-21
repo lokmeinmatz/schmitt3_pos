@@ -19,6 +19,7 @@
 </template>
 
 <script>
+import {toPriceString} from '../utils'
 import store from '../store'
 
 export default {
@@ -55,7 +56,7 @@ export default {
   },
   computed: {
     toPriceString() {
-      return amount => amount.toFixed(2) + "€";
+      return toPriceString
     },
     totalPrice() {
       return this.currentOrder.reduce((acc, item) => {

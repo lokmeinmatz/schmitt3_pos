@@ -19,15 +19,21 @@
     </v-card>
     <v-card v-else>
       <v-card-text>
-        <v-select
-          label="Konzert"
-          :items="concerts"
-          item-text="name"
-          item-value="id"
-          v-model="concert"
-          :append-outer-icon="store.selectedConcert != null ? 'mdi-square-edit-outline':'mdi-plus-box-outline'"
-          @click:append-outer="$router.push('/concert-settings')"
-        ></v-select>
+        <v-row align="center" justify="center">
+          <v-col dense>
+            <v-select
+              label="Konzert"
+              :items="concerts"
+              item-text="name"
+              item-value="id"
+              v-model="concert"
+            ></v-select>
+          </v-col>
+          <v-col cols="2" dense style="padding: 0; min-width: 80px;">
+            <v-icon class="ml-1" v-if="store.selectedConcert != null" @click="$router.push('/concert-settings')">mdi-square-edit-outline</v-icon>
+            <v-icon class="ml-1" @click="newConcert">mdi-plus-box-outline</v-icon>
+          </v-col>
+        </v-row>
         <v-btn to="/order" class="mr-4 mb-4">Kasse</v-btn>
         <v-btn to="/process" class="mr-4 mb-4">Ausgabe</v-btn>
         <v-btn to="/stats" class="mr-4 mb-4">Statistik</v-btn>
@@ -58,9 +64,6 @@ export default {
       set(v) { this.setConcert(v) },
       get() { return store.selectedConcert ? store.selectedConcert.id : null }
     },
-    toPriceString() {
-      return amount => amount.toFixed(2) + "€";
-    },
     totalPrice() {
       return store.currentOrder.reduce((acc, item) => {
         let price = this.items.find(e => e.name == item.name).amount;
@@ -82,6 +85,20 @@ export default {
         products: concertSnapshot.get('products'),
         ref: docref
       };
+    },
+    async newConcert() {
+
+      // create new concert document
+      const randend = btoa(Date.now().toString())
+      const name = 'newConcert' + randend.substr(randend.length - 13, 8)
+      let ndoc = await firebase.firestore().collection('Konzerte').add({
+        name: name,
+        products: []
+      })
+
+      store.concerts.push({id: ndoc.id, name: name})
+      this.concert = ndoc.id
+      alert('neues Konzert: ' + name)
     },
     async logout() {
       await firebase.auth().signOut()
